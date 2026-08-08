@@ -29,7 +29,7 @@ import java.nio.file.Path
  * the migration really did change one of their options.
  */
 object ConfigMigrator {
-    const val CURRENT_SCHEMA_VERSION = 1
+    const val CURRENT_SCHEMA_VERSION = 2
 
     /**
      * Messages to show once for the migration that produced each schema version. Versions absent
@@ -43,6 +43,8 @@ object ConfigMigrator {
     private const val SCHEMA_VERSION_KEY = "SCHEMA_VERSION"
     private const val NOTIFIED_SCHEMA_VERSION_KEY = "NOTIFIED_SCHEMA_VERSION"
     private const val IS_ENABLED_KEY = "isEnabled"
+    private const val ANIMATION_KEY = "Animation"
+    private const val ANIMATION_SPEED_KEY = "speed"
 
     // Matches the indentation OneConfig itself writes, so a migration does not reformat the file.
     private const val INDENT = "\t"
@@ -101,6 +103,14 @@ object ConfigMigrator {
             // 0 -> 1: force the master switch off, so players carrying a config over from an
             // earlier version opt back in manually.
             if (stored < 1) config.addProperty(IS_ENABLED_KEY, false)
+
+            // 1 -> 2: change default animation duration from 1 to 0.4
+            if (stored < 2) {
+                val animation = config.getAsJsonObject(ANIMATION_KEY)
+                if (animation?.get(ANIMATION_SPEED_KEY)?.asFloat == 1f) {
+                    animation.addProperty(ANIMATION_SPEED_KEY, 0.4f)
+                }
+            }
 
             val changedOptions = config != original
 
